@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>活在真实中 · 中国近现代禁书与异见者知识图谱</title>
+<meta name="description" content="一个面向中国学生的近现代史民间记忆图谱：被禁的书、被遮蔽的人、被改写的事。从沈志华、高华、刘晓波、高行健等人的著作出发，构建可视化关系网络。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,700;1,400;1,700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css" rel="stylesheet">
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<style>
+:root{
+  --bg:#0c0a07;
+  --bg-soft:#14110c;
+  --bg-card:#1a1611;
+  --bg-elev:#221d16;
+  --paper:#e8dfc8;
+  --paper-dim:#bdb39a;
+  --paper-mute:#8a8273;
+  --paper-faint:#5a5448;
+  --ink-line:#322c22;
+  --ink-line-2:#221d16;
+  --red:#b8332a;
+  --red-soft:#c75148;
+  --gold:#a8884d;
+  --gold-soft:#c4a566;
+  --gold-bright:#e0c285;
+  --vermilion:#c25a3a;
+  --jade:#5d7867;
+  --ash:#7a6f60;
+  --shadow-1: 0 1px 0 rgba(0,0,0,.5), 0 2px 12px rgba(0,0,0,.35);
+  --shadow-2: 0 8px 30px rgba(0,0,0,.45);
+  --serif: "Noto Serif SC","Cormorant Garamond","Songti SC","STSong",serif;
+  --serif-display: "Noto Serif SC","Cormorant Garamond","Songti SC",serif;
+  --kai: "LXGW WenKai Screen","Noto Serif SC","STKaiti","Kaiti SC",serif;
+  --sans: "Noto Sans SC","Helvetica Neue",-apple-system,sans-serif;
+  --mono: "JetBrains Mono","SF Mono","Menlo",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;width:100%;background:var(--bg);color:var(--paper);font-family:var(--serif);overflow:hidden;-webkit-font-smoothing:antialiased;}
+body{
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(168,136,77,.06), transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(184,51,42,.05), transparent 55%),
+    repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(255,255,255,.008) 2px, rgba(255,255,255,.008) 3px);
+}
+
+/* Grain overlay */
+.grain{
+  position:fixed;inset:0;pointer-events:none;z-index:2;opacity:.32;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.92  0 0 0 0 0.87  0 0 0 0 0.78  0 0 0 0.45 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Top bar */
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:74px;z-index:30;
+  display:flex;align-items:center;gap:24px;padding:0 28px;
+  background:linear-gradient(to bottom, rgba(12,10,7,.95), rgba(12,10,7,.55) 70%, transparent);
+  pointer-events:none;
+}
+.topbar > *{pointer-events:auto}
+.brand{display:flex;align-items:baseline;gap:14px;line-height:1;}
+.brand .seal{
+  width:34px;height:34px;display:inline-grid;place-items:center;
+  background:var(--red);color:var(--paper);font-family:var(--serif-display);font-weight:900;font-size:18px;
+  border-radius:3px;transform:rotate(-4deg) translateY(-2px);
+  box-shadow: 1px 1px 0 rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.35);
+  letter-spacing:-2px;
+}
+.brand .title-cn{
+  font-family:var(--serif-display);font-weight:900;font-size:26px;letter-spacing:.04em;
+  color:var(--paper);text-shadow:0 1px 0 rgba(0,0,0,.5);
+}
+.brand .title-en{
+  font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:500;
+  font-size:15px;color:var(--paper-mute);letter-spacing:.08em;
+  margin-left:2px;
+}
+.search-wrap{flex:1;display:flex;justify-content:center}
+.search{
+  position:relative;width:min(520px,55%);
+}
+.search input{
+  width:100%;height:42px;padding:0 44px 0 18px;border:none;
+  background:rgba(232,223,200,.06);
+  border:1px solid var(--ink-line);
+  color:var(--paper);font-family:var(--serif);font-size:15px;letter-spacing:.02em;
+  border-radius:2px;outline:none;
+  transition:border-color .2s, background .2s;
+}
+.search input::placeholder{color:var(--paper-mute);font-style:italic}
+.search input:focus{border-color:var(--gold);background:rgba(232,223,200,.09);}
+.search-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--paper-mute);pointer-events:none}
+.topbar-actions{display:flex;gap:6px;align-items:center;}
+.tbtn{
+  background:transparent;border:1px solid var(--ink-line);color:var(--paper-dim);
+  padding:8px 14px;font-family:var(--sans);font-size:12.5px;letter-spacing:.08em;cursor:pointer;
+  border-radius:2px;transition:all .15s;
+}
+.tbtn:hover{border-color:var(--gold);color:var(--paper);background:rgba(168,136,77,.08)}
+.tbtn.active{border-color:var(--gold);color:var(--gold-bright);background:rgba(168,136,77,.12)}
+
+/* Graph area */
+#graph{position:fixed;inset:0;width:100%;height:100%;z-index:1;}
+
+/* Legend (bottom-left) */
+.legend{
+  position:fixed;left:24px;bottom:24px;z-index:20;
+  background:rgba(20,17,12,.85);backdrop-filter:blur(6px);
+  border:1px solid var(--ink-line);border-radius:3px;
+  padding:14px 16px 12px 16px;min-width:200px;
+  font-family:var(--sans);font-size:12px;
+  box-shadow: var(--shadow-1);
+}
+.legend h4{
+  margin:0 0 10px 0;font-family:var(--serif-display);font-size:13px;letter-spacing:.18em;
+  color:var(--paper-mute);font-weight:500;text-transform:uppercase;
+}
+.legend .row{
+  display:flex;align-items:center;gap:9px;padding:3px 0;cursor:pointer;
+  color:var(--paper-dim);transition:color .12s;
+  user-select:none;
+}
+.legend .row:hover{color:var(--paper)}
+.legend .row.off{opacity:.35}
+.legend .row.off:hover{opacity:.6}
+.legend .dot{
+  width:12px;height:12px;border-radius:50%;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.4);
+  flex-shrink:0;
+}
+.legend .label{flex:1;letter-spacing:.04em;}
+.legend .count{color:var(--paper-faint);font-family:var(--mono);font-size:10.5px;}
+
+/* About / intro panel (collapsed by default) */
+.about{
+  position:fixed;left:24px;top:90px;z-index:20;
+  width:min(360px,28vw);
+  background:rgba(20,17,12,.85);backdrop-filter:blur(6px);
+  border:1px solid var(--ink-line);border-radius:3px;
+  padding:18px 20px;
+  font-family:var(--serif);font-size:14px;line-height:1.85;color:var(--paper-dim);
+  letter-spacing:.02em;
+}
+.about .quote-mark{
+  font-family:var(--serif-display);font-size:38px;color:var(--gold);line-height:0;
+  display:inline-block;margin:8px 6px 0 -2px;vertical-align:-12px;
+}
+.about p{margin:0 0 10px 0}
+.about p:last-child{margin-bottom:0}
+.about .sig{
+  margin-top:14px;padding-top:12px;border-top:1px solid var(--ink-line);
+  font-family:var(--sans);font-size:11px;letter-spacing:.16em;color:var(--paper-mute);
+  text-transform:uppercase;
+}
+.about .close{
+  position:absolute;top:8px;right:10px;background:none;border:none;color:var(--paper-mute);
+  font-size:18px;cursor:pointer;padding:0 6px;line-height:1;
+}
+.about .close:hover{color:var(--paper)}
+
+/* Hint bottom-right */
+.hint{
+  position:fixed;right:24px;bottom:24px;z-index:20;
+  font-family:var(--mono);font-size:11px;color:var(--paper-faint);letter-spacing:.06em;
+  text-align:right;line-height:1.7;
+  pointer-events:none;
+}
+.hint kbd{
+  display:inline-block;padding:1px 6px;border:1px solid var(--paper-faint);border-radius:2px;
+  font-family:var(--mono);font-size:10px;color:var(--paper-dim);
+  background:rgba(232,223,200,.04);
+}
+
+/* Detail drawer */
+.drawer{
+  position:fixed;top:0;right:0;height:100%;width:min(560px,46vw);z-index:40;
+  background:var(--bg-soft);
+  border-left:1px solid var(--ink-line);
+  box-shadow: -8px 0 40px rgba(0,0,0,.55);
+  transform:translateX(105%);
+  transition:transform .42s cubic-bezier(.2,.85,.25,1);
+  display:flex;flex-direction:column;
+}
+.drawer.open{transform:translateX(0)}
+.drawer-head{
+  padding:24px 30px 18px 30px;border-bottom:1px solid var(--ink-line);
+  position:relative;background:linear-gradient(to bottom, rgba(168,136,77,.04), transparent);
+}
+.drawer-close{
+  position:absolute;top:14px;right:14px;background:none;border:none;
+  color:var(--paper-mute);font-size:22px;cursor:pointer;width:32px;height:32px;
+  border-radius:2px;display:grid;place-items:center;
+}
+.drawer-close:hover{background:rgba(232,223,200,.06);color:var(--paper)}
+.drawer-tag{
+  display:inline-block;padding:3px 10px;font-family:var(--sans);font-size:10.5px;letter-spacing:.18em;
+  text-transform:uppercase;border:1px solid currentColor;border-radius:1px;
+  margin-bottom:14px;
+}
+.drawer-name{
+  font-family:var(--serif-display);font-weight:900;font-size:38px;line-height:1.1;
+  letter-spacing:.02em;margin:0 0 6px 0;color:var(--paper);
+}
+.drawer-name .alt{
+  display:block;font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:500;
+  font-size:16px;color:var(--paper-mute);letter-spacing:.06em;margin-top:4px;
+}
+.drawer-meta{
+  display:flex;flex-wrap:wrap;gap:14px;align-items:center;
+  font-family:var(--mono);font-size:12px;color:var(--paper-mute);
+  margin-top:10px;letter-spacing:.04em;
+}
+.drawer-meta .field{color:var(--gold-soft);font-family:var(--sans);font-size:12px;letter-spacing:.08em;}
+.drawer-meta .dot{width:3px;height:3px;border-radius:50%;background:var(--paper-faint);}
+
+.drawer-body{
+  flex:1;overflow-y:auto;padding:26px 30px 60px 30px;
+  scrollbar-width:thin;scrollbar-color:var(--ink-line) transparent;
+}
+.drawer-body::-webkit-scrollbar{width:6px}
+.drawer-body::-webkit-scrollbar-thumb{background:var(--ink-line);border-radius:3px}
+
+.lead{
+  font-family:var(--kai);
+  font-size:17px;line-height:1.95;color:var(--paper);
+  letter-spacing:.03em;
+  border-left:2px solid var(--gold);padding:2px 0 2px 16px;
+  margin-bottom:28px;
+}
+.section{margin-bottom:24px}
+.section h3{
+  font-family:var(--serif-display);font-weight:700;font-size:14px;letter-spacing:.24em;
+  color:var(--gold-soft);text-transform:uppercase;margin:0 0 12px 0;
+  display:flex;align-items:center;gap:12px;
+}
+.section h3::before{
+  content:"";display:block;width:18px;height:1px;background:var(--gold);
+}
+.section p{
+  font-family:var(--kai);
+  font-size:15.5px;line-height:1.95;color:var(--paper-dim);margin:0;
+  letter-spacing:.02em;
+}
+.quote-block{
+  margin:28px 0;padding:20px 22px 18px 22px;
+  background:rgba(168,136,77,.05);
+  border-left:3px solid var(--red);
+  font-family:var(--kai);font-size:16px;line-height:1.9;color:var(--paper);
+  font-style:normal;letter-spacing:.04em;
+  position:relative;
+}
+.quote-block::before{
+  content:"〝";position:absolute;top:-6px;left:8px;
+  font-family:var(--serif-display);font-size:36px;color:var(--red);
+  line-height:1;
+}
+.quote-block .src{
+  display:block;margin-top:10px;font-family:var(--sans);font-size:12px;
+  color:var(--paper-mute);letter-spacing:.06em;text-align:right;
+}
+.related{
+  margin-top:32px;padding-top:22px;border-top:1px solid var(--ink-line);
+}
+.related h4{
+  font-family:var(--serif-display);font-weight:500;font-size:12px;letter-spacing:.24em;
+  color:var(--paper-mute);text-transform:uppercase;margin:0 0 14px 0;
+}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border:1px solid var(--ink-line);background:rgba(232,223,200,.03);
+  font-family:var(--sans);font-size:12.5px;color:var(--paper-dim);
+  cursor:pointer;transition:all .15s;border-radius:2px;
+  letter-spacing:.02em;
+}
+.chip:hover{border-color:var(--gold);color:var(--paper);background:rgba(168,136,77,.08);}
+.chip .chip-dot{width:7px;height:7px;border-radius:50%;}
+
+/* Reading controls */
+.drawer-foot{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:10px 30px;border-top:1px solid var(--ink-line);
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--bg-soft);font-family:var(--mono);font-size:11px;color:var(--paper-mute);letter-spacing:.04em;
+}
+.font-controls{display:flex;gap:4px}
+.font-controls button{
+  background:none;border:1px solid var(--ink-line);color:var(--paper-mute);
+  width:26px;height:26px;cursor:pointer;font-family:var(--serif);
+  border-radius:2px;
+}
+.font-controls button:hover{color:var(--paper);border-color:var(--gold);}
+.font-controls .small{font-size:10px}
+.font-controls .med{font-size:13px}
+.font-controls .large{font-size:16px}
+
+/* Loading state */
+.loading{
+  position:fixed;inset:0;z-index:50;background:var(--bg);
+  display:grid;place-items:center;color:var(--paper);
+  transition:opacity .6s;
+}
+.loading.hide{opacity:0;pointer-events:none;visibility:hidden}
+.loading.hide *{animation:none !important;}
+.loading-inner{text-align:center;font-family:var(--serif-display);}
+.loading-seal{
+  width:96px;height:96px;margin:0 auto 22px;background:var(--red);color:var(--paper);
+  display:grid;place-items:center;font-size:54px;font-weight:900;letter-spacing:-6px;
+  transform:rotate(-3deg);border-radius:4px;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.4), inset 0 0 0 2px rgba(0,0,0,.3);
+  animation: sealIn .8s ease-out;
+}
+@keyframes sealIn{from{transform:rotate(-25deg) scale(.3);opacity:0}to{transform:rotate(-3deg) scale(1);opacity:1}}
+.loading-title{font-size:36px;font-weight:900;letter-spacing:.06em;margin-bottom:6px;}
+.loading-sub{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:16px;color:var(--paper-mute);letter-spacing:.12em;}
+.loading-bar{margin-top:32px;width:240px;height:2px;background:var(--ink-line);overflow:hidden;}
+.loading-bar::after{content:"";display:block;height:100%;width:40%;background:var(--gold);animation: loadBar 1.4s infinite ease-in-out;}
+@keyframes loadBar{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+
+/* Mobile */
+@media (max-width:780px){
+  .topbar{flex-wrap:wrap;height:auto;padding:12px 16px;gap:10px;}
+  .brand .title-cn{font-size:20px}
+  .brand .title-en{display:none}
+  .search-wrap{order:3;width:100%;}
+  .search{width:100%}
+  .legend{left:8px;bottom:8px;font-size:11px;min-width:160px;padding:10px 12px}
+  .about{display:none}
+  .hint{display:none}
+  .drawer{width:100vw}
+  .drawer-name{font-size:28px}
+}
+
+/* Empty state */
+.empty-state{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;
+  color:var(--paper-mute);font-family:var(--serif-display);font-size:14px;
+  letter-spacing:.16em;text-align:center;
+}
+
+/* Footer ribbon */
+.ribbon{
+  position:fixed;left:50%;bottom:82px;transform:translateX(-50%);z-index:18;
+  font-family:var(--kai);font-size:14.5px;color:var(--paper-faint);
+  letter-spacing:.06em;pointer-events:none;
+  text-align:center;line-height:1.6;
+  max-width:min(900px,80vw);padding:8px 16px;
+  background:linear-gradient(to right, transparent, rgba(20,17,12,.85) 12%, rgba(20,17,12,.85) 88%, transparent);
+  border-radius:2px;
+  transition:opacity .2s;
+}
+.ribbon .em{color:var(--paper-mute);font-style:italic;letter-spacing:.16em;}
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+
+<!-- Loading splash -->
+<div class="loading" id="loading">
+  <div class="loading-inner">
+    <div class="loading-seal">真</div>
+    <div class="loading-title">活在真实中</div>
+    <div class="loading-sub">Living in Truth · 中国近现代禁书与异见者图谱</div>
+    <div class="loading-bar"></div>
+  </div>
+</div>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="brand">
+    <span class="seal">真</span>
+    <span class="title-cn">活在真实中</span>
+    <span class="title-en">Living in Truth</span>
+  </div>
+  <div class="search-wrap">
+    <div class="search">
+      <input id="search" type="search" placeholder="搜索人名、书名、事件、概念…  例：高华、墓碑、反右、阿伦特" autocomplete="off" spellcheck="false">
+      <span class="search-icon">⌕</span>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="tbtn" id="btn-about">缘起</button>
+    <button class="tbtn" id="btn-reset">重置视图</button>
+  </div>
+</header>
+
+<!-- About panel -->
+<aside class="about" id="about" style="display:none">
+  <button class="close" id="about-close">×</button>
+  <p><span class="quote-mark">「</span>活在真实中——这是哈维尔给捷克朋友的劝告，也是刘晓波在《我没有敌人》中重复的句子。</p>
+  <p>这个图谱试图勾勒出二十世纪以来，那些被中国官方教育系统遮蔽、删减、或彻底抹除的人与书：历史学者用档案撞开党史的虚构、作家用记忆对抗失忆、异见者用身体丈量底线、海外汉学家从远处描出在场者无法说出的轮廓。</p>
+  <p>每一个节点都是一扇门。点开它，看见的不是判决，而是事实。</p>
+  <p class="sig">— 一份给被洗脑教育所塑造之年轻人的私人地图</p>
+</aside>
+
+<!-- Legend -->
+<aside class="legend" id="legend">
+  <h4>图例 · Categories</h4>
+  <div class="row" data-cat="historian"><span class="dot" style="background:#a8884d"></span><span class="label">历史学者</span><span class="count" id="cnt-historian">·</span></div>
+  <div class="row" data-cat="sinologist"><span class="dot" style="background:#c4a566"></span><span class="label">海外汉学家</span><span class="count" id="cnt-sinologist">·</span></div>
+  <div class="row" data-cat="inner-party-dissent"><span class="dot" style="background:#7d6444"></span><span class="label">党内反思</span><span class="count" id="cnt-inner-party-dissent">·</span></div>
+  <div class="row" data-cat="dissident"><span class="dot" style="background:#b8332a"></span><span class="label">异见 · 维权</span><span class="count" id="cnt-dissident">·</span></div>
+  <div class="row" data-cat="writer"><span class="dot" style="background:#c25a3a"></span><span class="label">作家 · 文学</span><span class="count" id="cnt-writer">·</span></div>
+  <div class="row" data-cat="journalist"><span class="dot" style="background:#d39a4d"></span><span class="label">调查记者</span><span class="count" id="cnt-journalist">·</span></div>
+  <div class="row" data-cat="educator"><span class="dot" style="background:#9eb07e"></span><span class="label">独立教育</span><span class="count" id="cnt-educator">·</span></div>
+  <div class="row" data-cat="thinker-foreign"><span class="dot" style="background:#5d7867"></span><span class="label">外国思想资源</span><span class="count" id="cnt-thinker-foreign">·</span></div>
+  <div class="row" data-cat="thinker-republic"><span class="dot" style="background:#7a6f60"></span><span class="label">民国思想资源</span><span class="count" id="cnt-thinker-republic">·</span></div>
+  <div class="row" data-cat="book"><span class="dot" style="background:#e8dfc8;border:1px solid #a8884d"></span><span class="label">著作</span><span class="count" id="cnt-book">·</span></div>
+  <div class="row" data-cat="event"><span class="dot" style="background:#6e1f1c"></span><span class="label">历史事件</span><span class="count" id="cnt-event">·</span></div>
+  <div class="row" data-cat="concept"><span class="dot" style="background:#3b5a4a"></span><span class="label">核心概念</span><span class="count" id="cnt-concept">·</span></div>
+  <div class="row" data-cat="platform"><span class="dot" style="background:#5a4738"></span><span class="label">出版 · 平台</span><span class="count" id="cnt-platform">·</span></div>
+</aside>
+
+<!-- Center ribbon -->
+<div class="ribbon">
+  <span class="em">点节点看词条 · 点关系线看连接 · 拖动可移动 · 滚轮缩放</span>
+</div>
+
+<!-- Bottom-right hint -->
+<div class="hint">
+  <kbd>/</kbd> 搜索　<kbd>ESC</kbd> 关闭面板<br>
+  <kbd>双击</kbd>聚焦节点　<kbd>滚轮</kbd>缩放
+</div>
+
+<!-- Graph -->
+<div id="graph"></div>
+
+<!-- Detail drawer -->
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <button class="drawer-close" id="drawer-close" aria-label="关闭">×</button>
+    <span class="drawer-tag" id="d-tag">—</span>
+    <h2 class="drawer-name" id="d-name">—<span class="alt" id="d-alt"></span></h2>
+    <div class="drawer-meta">
+      <span id="d-years" class="years">—</span>
+      <span class="dot"></span>
+      <span id="d-field" class="field">—</span>
+    </div>
+  </div>
+  <div class="drawer-body" id="d-body">
+    <p class="lead" id="d-lead">—</p>
+    <div id="d-sections"></div>
+    <div class="quote-block" id="d-quote" style="display:none">
+      <span id="d-quote-text"></span>
+      <span class="src" id="d-quote-src"></span>
+    </div>
+    <div class="related">
+      <h4>相关 · Related</h4>
+      <div class="chips" id="d-chips"></div>
+    </div>
+  </div>
+  <div class="drawer-foot">
+    <span id="d-readtime">— 字 · 约 — 分钟</span>
+    <div class="font-controls">
+      <button class="small" data-fs="0.92">小</button>
+      <button class="med" data-fs="1">中</button>
+      <button class="large" data-fs="1.12">大</button>
+    </div>
+  </div>
+</aside>
+
+<!-- 9 个节点数据分片 + 1 个边文件 + 汇总器，最后 graph.js -->
+<script src="data/01-historians.js"></script>
+<script src="data/02-sinologists-party.js"></script>
+<script src="data/03-dissidents.js"></script>
+<script src="data/04-writers.js"></script>
+<script src="data/05-journalists-foreign.js"></script>
+<script src="data/06-books.js"></script>
+<script src="data/07-events.js"></script>
+<script src="data/08-concepts.js"></script>
+<script src="data/09-platforms.js"></script>
+<script src="data/10-edges.js"></script>
+<script src="data/99-assemble.js"></script>
+<script src="graph.js?v=4"></script>
+
+</body>
+</html>
