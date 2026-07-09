@@ -11,6 +11,7 @@
 <link href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css" rel="stylesheet">
 <!-- Obsidian 同款引擎：PIXI.js (WebGL 渲染) + d3-force (物理仿真) -->
 <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.0/dist/pixi.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@pixi/unsafe-eval@7.4.0/dist/unsafe-eval.min.js"></script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <style>
 :root{
@@ -355,6 +356,124 @@ body{
   transition:opacity .2s;
 }
 .ribbon .em{color:var(--paper-mute);font-style:italic;letter-spacing:.16em;}
+
+/* v7 interface — quiet surfaces, one spacing system, clearer hierarchy */
+:root{
+  --bg:#0b0c0b;
+  --bg-soft:#111311;
+  --bg-card:rgba(20,22,19,.92);
+  --bg-elev:#191c18;
+  --paper:#eee9dc;
+  --paper-dim:#c2bbaa;
+  --paper-mute:#8f8a7d;
+  --paper-faint:#666257;
+  --ink-line:rgba(238,233,220,.12);
+  --gold:#aa8950;
+  --gold-soft:#c6a668;
+  --gold-bright:#e1c78e;
+  --red:#a83b32;
+  --shadow-1:0 8px 28px rgba(0,0,0,.28);
+  --shadow-2:-16px 0 56px rgba(0,0,0,.42);
+  --ui-radius:10px;
+}
+body{
+  background-image:
+    radial-gradient(circle at 42% 38%,rgba(170,137,80,.055),transparent 38%),
+    radial-gradient(circle at 74% 72%,rgba(168,59,50,.035),transparent 35%);
+}
+.grain{opacity:.16}
+.topbar{
+  height:76px;padding:0 24px;gap:28px;
+  background:linear-gradient(to bottom,rgba(11,12,11,.98) 0%,rgba(11,12,11,.86) 68%,transparent 100%);
+}
+.brand{align-items:center;gap:11px;min-width:268px}
+.brand .seal{width:36px;height:36px;border-radius:7px;font-size:19px;transform:rotate(-3deg)}
+.brand .title-cn{font-size:22px;letter-spacing:.08em;white-space:nowrap}
+.brand .title-en{font-size:13px;margin-left:0;opacity:.8}
+.search-wrap{justify-content:flex-start}
+.search{width:min(480px,100%)}
+.search input{
+  height:42px;padding:0 44px 0 42px;border-radius:var(--ui-radius);
+  background:rgba(238,233,220,.045);font-family:var(--sans);font-size:14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.018);
+}
+.search input:focus{border-color:rgba(198,166,104,.62);background:rgba(238,233,220,.07);box-shadow:0 0 0 3px rgba(170,137,80,.09)}
+.search-icon{left:15px;right:auto;font-size:20px;color:var(--paper-faint)}
+.search-results{
+  display:none;position:absolute;top:49px;left:0;right:0;padding:6px;
+  background:rgba(17,19,17,.98);border:1px solid var(--ink-line);border-radius:var(--ui-radius);
+  box-shadow:0 18px 46px rgba(0,0,0,.42);backdrop-filter:blur(18px);
+}
+.search-results.open{display:block}
+.search-result{
+  width:100%;display:grid;grid-template-columns:9px 1fr auto;align-items:center;gap:10px;
+  border:0;background:transparent;color:var(--paper-dim);padding:9px 10px;border-radius:7px;
+  text-align:left;cursor:pointer;font-family:var(--sans);
+}
+.search-result:hover,.search-result.active{background:rgba(238,233,220,.07);color:var(--paper)}
+.search-result .result-dot{width:7px;height:7px;border-radius:50%}
+.search-result .result-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-result .result-cat{font-size:10px;color:var(--paper-mute);letter-spacing:.08em}
+.search-empty{padding:13px;color:var(--paper-mute);font-family:var(--sans);font-size:12px;text-align:center}
+.topbar-actions{gap:8px}
+.tbtn{height:36px;padding:0 13px;border-radius:8px;font-size:12px;background:rgba(238,233,220,.025)}
+.tbtn:hover{transform:translateY(-1px)}
+.legend{
+  left:20px;bottom:20px;width:222px;min-width:0;max-height:calc(100vh - 118px);overflow:auto;
+  padding:15px;background:rgba(17,19,17,.88);border-radius:var(--ui-radius);
+  backdrop-filter:blur(18px);box-shadow:var(--shadow-1);scrollbar-width:none;
+}
+.legend::-webkit-scrollbar{display:none}
+.legend-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;padding-bottom:11px;border-bottom:1px solid var(--ink-line)}
+.legend h4{margin:0 0 4px;font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.12em;color:var(--paper)}
+.legend-head p{margin:0;color:var(--paper-faint);font-family:var(--mono);font-size:9.5px;letter-spacing:.02em}
+.legend-head button{border:0;background:transparent;color:var(--gold-soft);padding:1px 0;font-family:var(--sans);font-size:10px;cursor:pointer}
+.legend .row{gap:10px;padding:5px 7px;margin:1px -7px;border-radius:6px;font-size:11px;transition:background .15s,color .15s,opacity .15s}
+.legend .row:hover{background:rgba(238,233,220,.055)}
+.legend .dot{width:9px;height:9px}
+.legend .count{font-size:9.5px}
+.about{left:260px;top:84px;width:min(390px,calc(100vw - 280px));padding:20px 22px;border-radius:var(--ui-radius);background:rgba(17,19,17,.96);box-shadow:var(--shadow-1);backdrop-filter:blur(18px)}
+.graph-controls{
+  position:fixed;right:20px;bottom:20px;z-index:21;display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid var(--ink-line);border-radius:var(--ui-radius);background:rgba(17,19,17,.88);backdrop-filter:blur(18px);box-shadow:var(--shadow-1)
+}
+.graph-controls button{width:38px;height:36px;border:0;border-bottom:1px solid var(--ink-line);background:transparent;color:var(--paper-dim);font:18px var(--sans);cursor:pointer}
+.graph-controls button:last-child{border-bottom:0;font-size:15px}
+.graph-controls button:hover{background:rgba(238,233,220,.07);color:var(--gold-bright)}
+.node-tooltip{
+  display:none;position:fixed;z-index:24;max-width:240px;padding:8px 10px;border:1px solid var(--ink-line);
+  border-radius:7px;background:rgba(17,19,17,.96);box-shadow:var(--shadow-1);pointer-events:none;
+  font-family:var(--sans);font-size:12px;color:var(--paper);line-height:1.45;transform:translate(14px,14px)
+}
+.node-tooltip.visible{display:block}
+.node-tooltip small{display:block;margin-top:2px;color:var(--paper-mute);font-size:10px;letter-spacing:.06em}
+.ribbon{bottom:22px;max-width:min(620px,50vw);padding:7px 18px;border:1px solid rgba(238,233,220,.07);border-radius:999px;background:rgba(17,19,17,.72);backdrop-filter:blur(12px);font-family:var(--sans);font-size:11px}
+.ribbon .em{font-style:normal;letter-spacing:.08em}
+.hint{right:70px;bottom:20px;font-size:9.5px;line-height:1.8}
+.drawer{width:min(520px,42vw);background:rgba(17,19,17,.985);border-left-color:var(--ink-line);box-shadow:var(--shadow-2);transition:transform .32s cubic-bezier(.22,.78,.24,1)}
+.drawer-head{padding:26px 30px 20px;background:linear-gradient(160deg,rgba(170,137,80,.07),transparent 60%)}
+.drawer-name{font-size:34px}
+.drawer-body{padding:24px 30px 64px}
+.lead{font-size:16px;line-height:1.9}
+.section p{font-size:15px;line-height:1.9}
+.chip{border-radius:7px;padding:7px 10px}
+.drawer-close{border:1px solid transparent;border-radius:8px}
+
+@media (max-width:980px){
+  .brand{min-width:auto}.brand .title-en{display:none}.search-wrap{justify-content:center}
+  .hint{display:none}.ribbon{max-width:55vw}
+}
+@media (max-width:780px){
+  .topbar{height:auto;padding:10px 12px;gap:8px;background:rgba(11,12,11,.94);backdrop-filter:blur(14px)}
+  .brand{width:auto;flex:1;min-width:0}.brand .seal{width:31px;height:31px;font-size:16px}.brand .title-cn{font-size:18px;overflow:hidden;text-overflow:ellipsis}
+  .topbar-actions{margin-left:auto;flex-shrink:0}.tbtn{height:32px;padding:0 8px}.search-wrap{order:3;width:100%;flex:0 0 100%}.search input{height:39px}
+  .search-results{top:44px}.legend{left:10px;right:56px;bottom:10px;width:auto;max-height:none;display:flex;gap:5px;padding:8px;overflow-x:auto;overflow-y:hidden}
+  .legend-head{display:none}.legend .row{flex:0 0 auto;margin:0;padding:7px 9px;border:1px solid var(--ink-line)}.legend .count{display:none}
+  .graph-controls{right:10px;bottom:10px}.graph-controls button{width:38px;height:34px}
+  .ribbon{display:none}.drawer{width:100vw}.drawer-head{padding:22px 22px 17px}.drawer-body{padding:22px 22px 62px}.drawer-foot{padding:10px 22px}
+  .about{left:12px;right:12px;top:106px;width:auto}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.drawer,.loading{transition:none}.loading-seal,.loading-bar::after{animation:none}}
 </style>
 </head>
 <body>
@@ -380,8 +499,9 @@ body{
   </div>
   <div class="search-wrap">
     <div class="search">
-      <input id="search" type="search" placeholder="搜索人名、书名、事件、概念…  例：高华、墓碑、反右、阿伦特" autocomplete="off" spellcheck="false">
-      <span class="search-icon">⌕</span>
+      <span class="search-icon" aria-hidden="true">⌕</span>
+      <input id="search" type="search" placeholder="搜索人、书与事件…" autocomplete="off" spellcheck="false" aria-label="搜索图谱">
+      <div class="search-results" id="search-results" role="listbox" aria-label="搜索结果"></div>
     </div>
   </div>
   <div class="topbar-actions">
@@ -401,7 +521,13 @@ body{
 
 <!-- Legend -->
 <aside class="legend" id="legend">
-  <h4>图例 · Categories</h4>
+  <div class="legend-head">
+    <div>
+      <h4>探索图谱</h4>
+      <p><span id="stat-nodes">—</span> 个词条 · <span id="stat-edges">—</span> 条关系</p>
+    </div>
+    <button id="legend-reset" type="button">全选</button>
+  </div>
   <div class="row" data-cat="historian"><span class="dot" style="background:#a8884d"></span><span class="label">历史学者</span><span class="count" id="cnt-historian">·</span></div>
   <div class="row" data-cat="sinologist"><span class="dot" style="background:#c4a566"></span><span class="label">海外汉学家</span><span class="count" id="cnt-sinologist">·</span></div>
   <div class="row" data-cat="inner-party-dissent"><span class="dot" style="background:#7d6444"></span><span class="label">党内反思</span><span class="count" id="cnt-inner-party-dissent">·</span></div>
@@ -417,15 +543,24 @@ body{
   <div class="row" data-cat="platform"><span class="dot" style="background:#5a4738"></span><span class="label">出版 · 平台</span><span class="count" id="cnt-platform">·</span></div>
 </aside>
 
+<!-- Graph controls -->
+<nav class="graph-controls" aria-label="图谱视图控制">
+  <button id="zoom-in" type="button" aria-label="放大">＋</button>
+  <button id="zoom-out" type="button" aria-label="缩小">−</button>
+  <button id="zoom-fit" type="button" aria-label="适应屏幕">⌗</button>
+</nav>
+
+<div class="node-tooltip" id="node-tooltip" role="status" aria-live="polite"></div>
+
 <!-- Center ribbon -->
 <div class="ribbon">
-  <span class="em">点节点看词条 · 点关系线看连接 · 拖动可移动 · 滚轮缩放</span>
+  <span class="em">选择节点，沿关系探索被遮蔽的人、书与事件</span>
 </div>
 
 <!-- Bottom-right hint -->
 <div class="hint">
-  <kbd>/</kbd> 搜索　<kbd>ESC</kbd> 关闭面板<br>
-  <kbd>双击</kbd>聚焦节点　<kbd>滚轮</kbd>缩放
+  <kbd>/</kbd> 搜索　<kbd>ESC</kbd> 返回全图<br>
+  拖动画布 · 滚轮缩放 · 拖动节点
 </div>
 
 <!-- Graph -->
@@ -477,7 +612,7 @@ body{
 <script src="data/09-platforms.js"></script>
 <script src="data/10-edges.js"></script>
 <script src="data/99-assemble.js"></script>
-<script src="graph.js?v=6"></script>
+<script src="graph.js?v=7"></script>
 
 </body>
 </html>
